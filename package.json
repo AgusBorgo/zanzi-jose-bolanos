@@ -1,0 +1,18 @@
+{
+  "name": "zanzi-jose-bolanos",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
+  },
+  "dependencies": {
+    "@fontsource-variable/manrope": "^5.1.0",
+    "@fontsource/cormorant-garamond": "^5.1.0",
+    "next": "^16.4.1",
+    "nodemailer": "^6.9.16",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
+  }
+}
