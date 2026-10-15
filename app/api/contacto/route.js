@@ -21,7 +21,7 @@ export async function POST(req) {
   const telefono = limpiar(body.telefono, 40);
   const email = limpiar(body.email, 120);
   const mensaje = limpiar(body.mensaje, 2000);
-  const unidad = UNIDADES.find((u) => u.id === body.unidad);
+  const unidad = UNIDADES.find((u) => u.id === body.unidad && !u.vendido);
 
   if (!nombre || !telefono) {
     return Response.json({ error: "Completá tu nombre y teléfono." }, { status: 400 });

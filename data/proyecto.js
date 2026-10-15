@@ -13,6 +13,24 @@ export const PROYECTO = {
 
 export const UNIDADES = [
   {
+    id: "pb-a-duplex",
+    codigo: "PB A",
+    piso: "Planta baja y 1° piso",
+    titulo: "Dúplex 3 ambientes con patio y cochera",
+    tipo: "Dúplex",
+    ambientes: 3,
+    vendido: true, // ← unidad vendida: se muestra marcada en el edificio, sin precio ni consultas
+    tags: ["patio", "cochera", "3amb"],
+    plano: "/img/plano-duplex-pb.webp",
+    resumen: "El equilibrio perfecto entre la independencia de una casa y la seguridad de un departamento.",
+    destacados: [
+      "Garage propio",
+      "Patio propio",
+      "Living, cocina y toilette en planta baja",
+      "Dos dormitorios y baño completo arriba",
+    ],
+  },
+  {
     id: "pb-b",
     codigo: "PB B",
     piso: "Planta baja",
@@ -173,12 +191,14 @@ export const GALERIA = [
   { src: "/img/garage.webp", titulo: "Garage", texto: "Cochera propia con acceso directo." },
 ];
 
+export const DISPONIBLES = UNIDADES.filter((u) => !u.vendido);
+
 export const formatUSD = (n) => "USD " + n.toLocaleString("es-AR");
 
 export const waLink = (texto) =>
   `https://wa.me/${PROYECTO.whatsapp}?text=${encodeURIComponent(texto)}`;
 
 export const waMensajeUnidad = (u) =>
-  u
+  u && !u.vendido
     ? `¡Hola! Me interesa la unidad ${u.codigo} (${u.titulo}) de José Bolaños 1256. ¿Me pasan más info? ${u.link}`
     : "¡Hola! Quiero recibir información sobre el proyecto José Bolaños 1256 en Lanús Este.";

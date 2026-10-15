@@ -1,12 +1,12 @@
 "use client";
 import { useMemo, useState } from "react";
-import { UNIDADES, FILTROS, formatUSD, waLink, waMensajeUnidad } from "@/data/proyecto";
+import { UNIDADES, DISPONIBLES, FILTROS, formatUSD, waLink, waMensajeUnidad } from "@/data/proyecto";
 import { useUnidad } from "./UnidadContext";
 import Reveal from "./Reveal";
 
 // Posición de cada unidad en el corte esquemático del edificio (SVG 520 x 560).
 const X0 = 70, X1 = 270, X2 = 470;
-const PB_W = (X2 - X0) / 3;
+const PB_W = (X1 - X0) / 3;
 const Y = { t3: 60, t2: 170, t1: 280, tpb: 390, suelo: 520 };
 
 const BLOQUES = {
@@ -14,6 +14,7 @@ const BLOQUES = {
   "duplex-a": { x: X1, y: Y.t3, w: X2 - X1, h: 220 },
   "2-b": { x: X0, y: Y.t2, w: X1 - X0, h: 110 },
   "1-a": { x: X0, y: Y.t1, w: X1 - X0, h: 110 },
+  "pb-a-duplex": { x: X1, y: Y.t1, w: X2 - X1, h: 240 },
   "pb-b": { x: X0, y: Y.tpb, w: PB_W, h: 130 },
   "pb-c": { x: X0 + PB_W, y: Y.tpb, w: PB_W, h: 130 },
   "pb-d": { x: X0 + PB_W * 2, y: Y.tpb, w: PB_W, h: 130 },
@@ -22,6 +23,19 @@ const BLOQUES = {
 function Ventanas({ b, tipo }) {
   // Dibujo de líneas dentro de cada bloque, al estilo del boceto a mano.
   const cx = b.x + b.w / 2;
+  if (tipo === "duplex-pb") {
+    // 1° piso: ventana + baranda / PB: portón de garage
+    return (
+      <g className="ed__lines">
+        <rect x={b.x + 24} y={b.y + 32} width={b.w - 48} height="44" />
+        <line x1={cx} y1={b.y + 32} x2={cx} y2={b.y + 76} />
+        <rect x={b.x + 30} y={b.y + 160} width={b.w - 60} height="72" />
+        {[0, 1, 2, 3, 4, 5].map((i) => (
+          <line key={i} x1={b.x + 30} y1={b.y + 172 + i * 10} x2={b.x + b.w - 30} y2={b.y + 172 + i * 10} />
+        ))}
+      </g>
+    );
+  }
   if (tipo === "pb") {
     return (
       <g className="ed__lines">
@@ -59,7 +73,7 @@ export default function Unidades() {
 
   const elegirFiltro = (f) => {
     setFiltro(f);
-    const lista = UNIDADES.filter((u) => f === "todas" || u.tags.includes(f));
+    const lista = DISPONIBLES.filter((u) => f === "todas" || u.tags.includes(f));
     if (lista.length && !lista.some((u) => u.id === unidadId)) setUnidadId(lista[0].id);
   };
 
@@ -111,25 +125,25 @@ export default function Unidades() {
                 <line x1={X0 - 10} y1={y} x2={X0} y2={y} className="ed__struct" />
               </g>
             ))}
-            {/* unidad no disponible en 1° */}
-            <g className="ed__na">
-              <rect x={X1} y={Y.t1} width={X2 - X1} height="110" />
-              <text x={(X1 + X2) / 2} y={Y.t1 + 60} textAnchor="middle">No disponible</text>
-            </g>
+            <defs>
+              <pattern id="rayado" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+                <line x1="0" y1="0" x2="0" y2="8" className="ed__hatch" />
+              </pattern>
+            </defs>
 
             {UNIDADES.map((un) => {
               const b = BLOQUES[un.id];
               if (!b) return null;
               const activo = un.id === unidadId;
               const vis = visibles.has(un.id);
-              const cls = ["ed__u", activo && "is-active", !vis && "is-dim", hover === un.id && "is-hover"].filter(Boolean).join(" ");
+              const cls = ["ed__u", un.vendido && "is-sold", activo && "is-active", !vis && "is-dim", hover === un.id && "is-hover"].filter(Boolean).join(" ");
               return (
                 <g
                   key={un.id}
                   className={cls}
                   role="button"
                   tabIndex={vis ? 0 : -1}
-                  aria-label={`${un.codigo}: ${un.titulo}, ${un.m2} metros cuadrados, ${formatUSD(un.precio)}`}
+                  aria-label={un.vendido ? `${un.codigo}: ${un.titulo}, vendida` : `${un.codigo}: ${un.titulo}, ${un.m2} metros cuadrados, ${formatUSD(un.precio)}`}
                   aria-pressed={activo}
                   onClick={() => elegir(un.id)}
                   onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), elegir(un.id))}
@@ -137,17 +151,24 @@ export default function Unidades() {
                   onMouseLeave={() => setHover(null)}
                 >
                   <rect x={b.x} y={b.y} width={b.w} height={b.h} className="ed__fill" />
-                  <Ventanas b={b} tipo={un.id.startsWith("pb") ? "pb" : "alto"} />
+                  {un.vendido && <rect x={b.x} y={b.y} width={b.w} height={b.h} fill="url(#rayado)" className="ed__rayado" />}
+                  <Ventanas b={b} tipo={un.id === "pb-a-duplex" ? "duplex-pb" : un.id.startsWith("pb") ? "pb" : "alto"} />
                   <text x={b.x + 10} y={b.y + 22} className="ed__code">{un.codigo}</text>
-                  {un.tags.includes("cochera") && (
-                    <text x={b.x + b.w - 8} y={b.y + 20} textAnchor="end" className="ed__mini">garage</text>
+                  {un.tags.includes("cochera") && !un.vendido && (
+                    <text x={b.x + b.w / 2} y={b.y + b.h - 4} textAnchor="middle" className="ed__mini">garage</text>
+                  )}
+                  {un.vendido && (
+                    <g className="ed__sello" transform={`rotate(-8 ${b.x + b.w / 2} ${b.y + 120})`}>
+                      <rect x={b.x + b.w / 2 - 62} y={b.y + 102} width="124" height="36" rx="4" />
+                      <text x={b.x + b.w / 2} y={b.y + 126} textAnchor="middle">VENDIDO</text>
+                    </g>
                   )}
                 </g>
               );
             })}
             <line x1="20" y1={Y.suelo} x2="500" y2={Y.suelo} className="ed__suelo" />
           </svg>
-          <p className="edificio__nota">Esquema ilustrativo · 1 dúplex ya vendido</p>
+          <p className="edificio__nota">Esquema ilustrativo</p>
         </div>
 
         {u && (
@@ -156,6 +177,7 @@ export default function Unidades() {
               <span className="ficha__codigo">{u.codigo}</span>
               <span className="ficha__piso">{u.piso}</span>
             </div>
+            {u.vendido && <span className="vendido-badge">Vendido</span>}
             <h3 className="ficha__titulo">{u.titulo}</h3>
             <p className="ficha__resumen">{u.resumen}</p>
 
@@ -165,27 +187,49 @@ export default function Unidades() {
               </a>
             </div>
 
-            <dl className="ficha__datos">
-              <div><dt>Superficie</dt><dd>{u.m2} m²</dd></div>
-              <div><dt>Ambientes</dt><dd>{u.ambientes}</dd></div>
-              <div><dt>Precio</dt><dd>{formatUSD(u.precio)}</dd></div>
-              <div><dt>Por m²</dt><dd>{formatUSD(Math.round(u.precio / u.m2))}</dd></div>
-            </dl>
+            {u.vendido ? (
+              <>
+                <dl className="ficha__datos ficha__datos--3">
+                  <div><dt>Ambientes</dt><dd>{u.ambientes}</dd></div>
+                  <div><dt>Niveles</dt><dd>2</dd></div>
+                  <div><dt>Estado</dt><dd>Vendido</dd></div>
+                </dl>
+                <ul className="ficha__lista">
+                  {u.destacados.map((d) => <li key={d}>{d}</li>)}
+                </ul>
+                <p className="ficha__fin">Esta unidad ya encontró dueño. Todavía quedan {DISPONIBLES.length} disponibles.</p>
+                <div className="ficha__cta">
+                  <button className="btn btn--ink" onClick={() => elegir(DISPONIBLES[0].id)}>Ver unidades disponibles</button>
+                  <a className="btn btn--wa" href={waLink(waMensajeUnidad(null))} target="_blank" rel="noopener">
+                    Consultar por WhatsApp
+                  </a>
+                </div>
+              </>
+            ) : (
+              <>
+                <dl className="ficha__datos">
+                  <div><dt>Superficie</dt><dd>{u.m2} m²</dd></div>
+                  <div><dt>Ambientes</dt><dd>{u.ambientes}</dd></div>
+                  <div><dt>Precio</dt><dd>{formatUSD(u.precio)}</dd></div>
+                  <div><dt>Por m²</dt><dd>{formatUSD(Math.round(u.precio / u.m2))}</dd></div>
+                </dl>
 
-            <ul className="ficha__lista">
-              {u.destacados.map((d) => <li key={d}>{d}</li>)}
-            </ul>
-            <p className="ficha__fin">Anticipo y cuotas · Acepta mascotas</p>
+                <ul className="ficha__lista">
+                  {u.destacados.map((d) => <li key={d}>{d}</li>)}
+                </ul>
+                <p className="ficha__fin">Anticipo y cuotas · Acepta mascotas</p>
 
-            <div className="ficha__cta">
-              <a className="btn btn--ink" href={u.link} target="_blank" rel="noopener">
-                Ver publicación completa ↗
-              </a>
-              <a className="btn btn--wa" href={waLink(waMensajeUnidad(u))} target="_blank" rel="noopener">
-                Consultar por WhatsApp
-              </a>
-              <button className="btn btn--line" onClick={consultar}>Dejar mis datos</button>
-            </div>
+                <div className="ficha__cta">
+                  <a className="btn btn--ink" href={u.link} target="_blank" rel="noopener">
+                    Ver publicación completa ↗
+                  </a>
+                  <a className="btn btn--wa" href={waLink(waMensajeUnidad(u))} target="_blank" rel="noopener">
+                    Consultar por WhatsApp
+                  </a>
+                  <button className="btn btn--line" onClick={consultar}>Dejar mis datos</button>
+                </div>
+              </>
+            )}
           </article>
         )}
       </div>
@@ -195,12 +239,12 @@ export default function Unidades() {
           <button
             key={un.id}
             role="listitem"
-            className={`tira__item ${un.id === unidadId ? "is-active" : ""} ${visibles.has(un.id) ? "" : "is-dim"}`}
+            className={`tira__item ${un.vendido ? "is-sold" : ""} ${un.id === unidadId ? "is-active" : ""} ${visibles.has(un.id) ? "" : "is-dim"}`}
             onClick={() => elegir(un.id)}
           >
             <strong>{un.codigo}</strong>
-            <span>{un.tipo} · {un.m2} m²</span>
-            <em>{formatUSD(un.precio)}</em>
+            <span>{un.vendido ? `${un.tipo} · ${un.ambientes} amb.` : `${un.tipo} · ${un.m2} m²`}</span>
+            <em>{un.vendido ? "Vendido" : formatUSD(un.precio)}</em>
           </button>
         ))}
       </div>

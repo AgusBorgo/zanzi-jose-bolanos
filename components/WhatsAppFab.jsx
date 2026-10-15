@@ -14,7 +14,7 @@ export default function WhatsAppFab() {
     return () => window.removeEventListener("scroll", on);
   }, []);
 
-  const u = interes ? unidad : null;
+  const u = interes && unidad && !unidad.vendido ? unidad : null;
   return (
     <a
       className={`fab ${visible ? "fab--on" : ""}`}

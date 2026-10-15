@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { UNIDADES, PROYECTO, waLink, waMensajeUnidad, formatUSD } from "@/data/proyecto";
+import { DISPONIBLES as UNIDADES, PROYECTO, waLink, waMensajeUnidad, formatUSD } from "@/data/proyecto";
 import { useUnidad } from "./UnidadContext";
 import Reveal from "./Reveal";
 
@@ -12,7 +12,7 @@ export default function Contacto() {
 
   // Si la persona eligió una unidad arriba, el formulario ya viene con esa unidad.
   useEffect(() => {
-    if (interes && unidad) setForm((f) => ({ ...f, unidad: unidad.id }));
+    if (interes && unidad && !unidad.vendido) setForm((f) => ({ ...f, unidad: unidad.id }));
   }, [interes, unidad]);
 
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));

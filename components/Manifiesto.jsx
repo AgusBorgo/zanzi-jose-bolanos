@@ -1,7 +1,7 @@
 "use client";
 import useScrollProgress from "./useScrollProgress";
 import Reveal from "./Reveal";
-import { UNIDADES } from "@/data/proyecto";
+import { DISPONIBLES } from "@/data/proyecto";
 
 const TEXTO =
   "Un proyecto pensado para la exclusividad y el encuentro, donde cada detalle evoca cercanía y diseño residencial de vanguardia. Viví la calidez de un hogar único en Lanús.";
@@ -24,7 +24,7 @@ export default function Manifiesto() {
         </p>
         <div className="datos">
           {[
-            [String(UNIDADES.length), "unidades disponibles"],
+            [String(DISPONIBLES.length), "unidades disponibles"],
             ["47–84", "m² por unidad"],
             ["2 y 3", "ambientes"],
             ["USD", "anticipo + cuotas"],

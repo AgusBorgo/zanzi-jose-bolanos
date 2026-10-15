@@ -277,6 +277,13 @@ h2 em, h1 em { font-style: italic; color: var(--wood); }
 .ed__u.is-active .ed__lines rect, .ed__u.is-active .ed__lines line { stroke: var(--wood); }
 .ed__u.is-active .ed__code { fill: var(--paper); }
 .ed__u.is-active .ed__mini { fill: var(--paper-3); }
+.ed__hatch { stroke: rgba(27, 26, 23, 0.16); stroke-width: 2; }
+.ed__u.is-sold .ed__lines rect, .ed__u.is-sold .ed__lines line { stroke: var(--muted); }
+.ed__u.is-sold .ed__code { fill: var(--muted); }
+.ed__u.is-sold.is-active .ed__fill { fill: var(--paper-3); }
+.ed__u.is-sold.is-active .ed__code { fill: var(--ink); }
+.ed__sello rect { fill: var(--paper); stroke: #9b2c1f; stroke-width: 2; }
+.ed__sello text { fill: #9b2c1f; font-family: var(--sans); font-weight: 800; font-size: 16px; letter-spacing: 0.24em; }
 .ed__u.is-dim { opacity: 0.22; cursor: default; }
 .ed__u { transition: opacity 0.35s ease; }
 
@@ -307,6 +314,10 @@ h2 em, h1 em { font-style: italic; color: var(--wood); }
 .ficha__plano img { max-height: 300px; width: auto; animation: planoIn 1.1s cubic-bezier(.6,.1,.2,1); }
 @keyframes planoIn { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
 .ficha__datos { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; margin: 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.ficha__datos--3 { grid-template-columns: repeat(3, 1fr) !important; }
+.vendido-badge { display: inline-block; margin-top: 10px; padding: 4px 12px; border: 1.5px solid #9b2c1f; color: #9b2c1f; border-radius: 4px; font-size: 0.72rem; font-weight: 800; letter-spacing: 0.22em; transform: rotate(-2deg); }
+.tira__item.is-sold em { color: #9b2c1f; letter-spacing: 0.12em; text-transform: uppercase; font-size: 0.74rem; }
+.tira__item.is-sold.is-active em { color: #e8a596; }
 .ficha__datos div { padding: 14px 10px 14px 0; }
 .ficha__datos dt { font-size: 0.7rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
 .ficha__datos dd { margin: 4px 0 0; font-family: var(--serif); font-size: 1.45rem; line-height: 1.1; }
