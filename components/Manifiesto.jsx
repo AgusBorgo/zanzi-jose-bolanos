@@ -25,7 +25,6 @@ export default function Manifiesto() {
         <div className="datos">
           {[
             [String(DISPONIBLES.length), "unidades disponibles"],
-            ["47–84", "m² por unidad"],
             ["2 y 3", "ambientes"],
             ["USD", "anticipo + cuotas"],
           ].map(([n, t], i) => (

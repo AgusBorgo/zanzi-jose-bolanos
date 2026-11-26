@@ -2,6 +2,7 @@ import { PROYECTO } from "@/data/proyecto";
 
 export default function Footer() {
   return (
+
     <footer className="footer">
       <img className="footer__logo" src="/img/zanzi.png" alt="Zanzi Constructora" />
       <p className="footer__arq">& Arquitecto Lucas Ilacqua</p>
@@ -12,6 +13,9 @@ export default function Footer() {
       </div>
       <p className="footer__legal">
         Imágenes ilustrativas, sujetas a modificaciones de proyecto. Precios y disponibilidad sujetos a confirmación.
+      </p>
+      <p className="footer__credito">
+        Diseño y desarrollo · <span>ANSE STUDIO</span>
       </p>
     </footer>
   );

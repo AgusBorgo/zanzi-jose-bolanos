@@ -30,9 +30,17 @@ export async function POST(req) {
     return Response.json({ error: "El email no parece válido." }, { status: 400 });
   }
 
-  const { GMAIL_USER, GMAIL_APP_PASSWORD, CONTACT_TO } = process.env;
-  if (!GMAIL_USER || !GMAIL_APP_PASSWORD) {
-    console.error("Faltan GMAIL_USER / GMAIL_APP_PASSWORD en las variables de entorno.");
+  // Dos formas de enviar el mail (alcanza con configurar UNA):
+  //  - Resend: RESEND_API_KEY (no necesita celular ni verificación en 2 pasos)
+  //  - Gmail:  GMAIL_USER + GMAIL_APP_PASSWORD
+  const { RESEND_API_KEY, GMAIL_USER, GMAIL_APP_PASSWORD, CONTACT_TO } = process.env;
+  const destino = CONTACT_TO || GMAIL_USER;
+  if (!RESEND_API_KEY && !(GMAIL_USER && GMAIL_APP_PASSWORD)) {
+    console.error("Falta configurar el envío: cargá RESEND_API_KEY (o GMAIL_USER + GMAIL_APP_PASSWORD).");
+    return Response.json({ error: "El formulario todavía no está configurado." }, { status: 500 });
+  }
+  if (!destino) {
+    console.error("Falta CONTACT_TO: el mail al que tienen que llegar las consultas.");
     return Response.json({ error: "El formulario todavía no está configurado." }, { status: 500 });
   }
 
@@ -62,19 +70,40 @@ export async function POST(req) {
     ${tel ? `<p><a href="https://wa.me/${tel.startsWith("54") ? tel : "549" + tel.replace(/^0/, "")}">Responder por WhatsApp</a></p>` : ""}
   </div>`;
 
+  const asunto = `Consulta: ${unidad ? unidad.codigo : "general"} — ${nombre}`;
+  const texto = filas.map(([k, v]) => `${k}: ${v}`).join("\n");
+
   try {
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: { user: GMAIL_USER, pass: GMAIL_APP_PASSWORD },
-    });
-    await transporter.sendMail({
-      from: `"Landing José Bolaños" <${GMAIL_USER}>`,
-      to: CONTACT_TO || GMAIL_USER,
-      replyTo: email || undefined,
-      subject: `Consulta: ${unidad ? unidad.codigo : "general"} — ${nombre}`,
-      text: filas.map(([k, v]) => `${k}: ${v}`).join("\n"),
-      html,
-    });
+    if (RESEND_API_KEY) {
+      const res = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          // Sin dominio propio verificado, Resend solo permite este remitente
+          // y solo entrega al mail con el que se creó la cuenta de Resend.
+          from: process.env.RESEND_FROM || "Landing José Bolaños <onboarding@resend.dev>",
+          to: [destino],
+          reply_to: email || undefined,
+          subject: asunto,
+          text: texto,
+          html,
+        }),
+      });
+      if (!res.ok) throw new Error(`Resend ${res.status}: ${await res.text()}`);
+    } else {
+      const transporter = nodemailer.createTransport({
+        service: "gmail",
+        auth: { user: GMAIL_USER, pass: GMAIL_APP_PASSWORD },
+      });
+      await transporter.sendMail({
+        from: `"Landing José Bolaños" <${GMAIL_USER}>`,
+        to: destino,
+        replyTo: email || undefined,
+        subject: asunto,
+        text: texto,
+        html,
+      });
+    }
     return Response.json({ ok: true });
   } catch (err) {
     console.error("Error enviando mail:", err);
